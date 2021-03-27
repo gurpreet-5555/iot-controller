@@ -36,16 +36,17 @@ def sendData(in_timestamp, in_value, in_sensor):
                'value': in_value,
                'sensor': in_sensor}
 
-    response = requests.post(url=SERVER_API_PATH, data=json.dumps(payload),
-                             headers={'content-type': 'application/json'})
-
-    print(response.content)
-
-    if str(response.content) != "b'Success'":
-        bufferedData.put((in_timestamp, in_value, in_sensor))  # Buffer sensor data if not sent successfully
-    elif str(response.content) == "b'Success'":
-        transmitCount += 1
-        print("Successfully sent: {}".format(transmitCount))
+    try:
+        response = requests.post(url=SERVER_API_PATH, data=json.dumps(payload),
+                                 headers={'content-type': 'application/json'})
+        print(response.content)
+        if str(response.content) != "b'Success'":
+            bufferedData.put((in_timestamp, in_value, in_sensor))  # Buffer sensor data if not sent successfully
+        elif str(response.content) == "b'Success'":
+            transmitCount += 1
+            print("Successfully sent: {}".format(transmitCount))
+    except requests.exceptions.ConnectionError:
+        bufferedData.put((in_timestamp, in_value, in_sensor))  # Buffer sensor data if connection failed
 
 
 # Function to read simulated sensor data from csv
@@ -68,13 +69,16 @@ def processDataFromCsv():
 
 # Function to send buffered data at once
 def processBufferedData():
+    data = []
     if not bufferedData.empty():
         print("Sending {} buffered records.".format(bufferedData.qsize()))
-        data = bufferedData.get()
-        sendData(data[0], data[1], data[2])
+        for i in range(bufferedData.qsize()):
+            data = bufferedData.get()
+            sendData(data[0], data[1], data[2])
 
 
 app = Flask(__name__)
+
 
 # Service to get count of successful and buffered records
 @app.route('/transmission-status', methods=['GET'])
@@ -89,12 +93,12 @@ def home():
 
 
 if __name__ == "__main__":
-    serviceThread = threading.Thread(target=app.run, kwargs={'port': args['port']})     # Thread for status service
-    mainThread = threading.Thread(target=processDataFromCsv)      # Thread for reading csv and sending data
+    serviceThread = threading.Thread(target=app.run, kwargs={'port': args['port']})  # Thread for status service
+    mainThread = threading.Thread(target=processDataFromCsv)  # Thread for reading csv and sending data
 
     serviceThread.start()
     mainThread.start()
 
     while True:
         processBufferedData()
-        time.sleep(args['bufferdelay'])     # Wait for specified no. of seconds to send buffered data
+        time.sleep(args['bufferdelay'])  # Wait for specified no. of seconds to send buffered data
