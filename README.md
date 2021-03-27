@@ -21,8 +21,6 @@ Client-Server programs to handle sensor data transmission from client to server 
 <ul>
   <li>Clone Repository</li>
   <pre>git clone https://github.com/gurpreet-5555/iot-controller.git</pre>  </ul>
-<ul>  <li>Navigate to main directory</li>
-  <pre>cd iot-controller</pre> </ul>
 <ul><li>Execute Server Program</li>
 <pre>python server.py --csvpath=sensorLog.csv --port=8000</pre>
 <pre>Arguments (Server)-
@@ -38,6 +36,8 @@ server: Server path to send data (Required)
 senddelay: Seconds to wait before sending next sensor data record. Default value is 60 seconds (Optional)
 bufferdelay: Seconds to wait before sending all buffered data. Default value is 5 seconds (Optional)
 </pre>
-<pre>Link to access data transmission status in Edge program: http://<egde_program_hostname>:<port>/transmission-status</pre></ul>
+<pre>Link to access data transmission status in Edge program: http://{egde_program_hostname}:{port}/transmission-status</pre>
+<img src="transmission_status.jpg" width="650" height="230" /></ul>
+
   
 
